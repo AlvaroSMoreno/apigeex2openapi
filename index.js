@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 const fs = require('fs');
+const { exit } = require('process');
 const parser = require('xml-js');
 const YAML = require('yaml');
 
@@ -95,10 +96,13 @@ if(index > -1) {
 
     result.paths = {};
 
-    for(flow in json_data2.ProxyEndpoint.Flows) {
-        let item = json_data2.ProxyEndpoint.Flows[flow];
-        const path_suffix = item.Condition._text.split(' ')[item.Condition._text.split(' ').indexOf('MatchesPath')+1].replaceAll('"','').replaceAll(')','').replaceAll('(','');
-        const http_verb = item.Condition._text.split(' ')[item.Condition._text.split(' ').indexOf('(request.verb')+2].replaceAll('"','').replaceAll(')','').replaceAll('(','');
+    let obj_arr = (json_data2.ProxyEndpoint.Flows.Flow.length != undefined)? json_data2.ProxyEndpoint.Flows.Flow : json_data2.ProxyEndpoint.Flows;
+
+    for(flow in obj_arr) {
+        let item = obj_arr[flow];
+        const flow_condition = item.Condition._text.split(' ');
+        const path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].replaceAll('"','').replaceAll(')','').replaceAll('(','').toString();
+        const http_verb = flow_condition[flow_condition.indexOf('(request.verb')+2].replaceAll('"','').replaceAll(')','').replaceAll('(','');
         const description = item._attributes.name;
         params_arr = [
             {
