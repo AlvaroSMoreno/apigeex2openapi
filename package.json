@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Open API convertion from Apigee X Proxy bundle",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlvaroSMoreno/apigeex2openapi.git"
+  },
   "bin": {
     "apigeex2openapi": "./index.js"
   },
