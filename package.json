@@ -1,0 +1,25 @@
+{
+  "name": "apigeex2openapi",
+  "version": "1.0.0",
+  "description": "Open API convertion from Apigee X Proxy bundle",
+  "main": "index.js",
+  "bin": {
+    "apigeex2openapi": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "apigee",
+    "apigeex",
+    "openapi"
+  ],
+  "author": "Alvaro Moreno",
+  "license": "MIT",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "xml-js": "^1.6.11",
+    "yaml": "^2.3.1"
+  }
+}
