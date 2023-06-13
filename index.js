@@ -133,6 +133,7 @@ if(index > -1) {
             params_arr.push({
                 name: path_param,
                 in: "path",
+                required: true,
                 schema: {
                     type: "string",
                     example: `{${path_param}}`
@@ -173,7 +174,8 @@ if(index > -1) {
                     }
                 }
             };
-            result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody = content_conditional;
+            result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody = {};
+            result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody.content = content_conditional;
         }
     }
 
