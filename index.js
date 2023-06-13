@@ -124,26 +124,23 @@ if(index > -1) {
                 }
             });
         }
+        let content_conditional = {};
         result.paths[path_suffix] = {};
+        // if we have path params
+        let path_param = "";
+        if(path_suffix.indexOf('{')>-1) {
+            path_param = path_suffix.substring(path_suffix.indexOf('{')+1, path_suffix.indexOf('}'));
+            params_arr.push({
+                name: path_param,
+                in: "path",
+                schema: {
+                    type: "string",
+                    example: `{${path_param}}`
+                }
+            });
+        }
         result.paths[path_suffix][http_verb.toString().toLowerCase()] = {
             description: description,
-            requestBody: {
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                key1: {
-                                    type: "integer"
-                                },
-                                key2: {
-                                    type: "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             parameters: params_arr,
             responses: {
                 "200": {
@@ -160,6 +157,24 @@ if(index > -1) {
                 }
             }
         };
+        if(http_verb.toString().toLowerCase() == 'post' || http_verb.toString().toLowerCase() == 'put') {
+            content_conditional = {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            key1: {
+                                type: "integer"
+                            },
+                            key2: {
+                                type: "string"
+                            }
+                        }
+                    }
+                }
+            };
+            result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody = content_conditional;
+        }
     }
 
     name_of_file = name_of_file.replaceAll('.xml', '');
