@@ -10,7 +10,7 @@ Command line tool to generate OAS File from an exported API Proxy bundle from AP
     apigeex2openapi -help
 - folder: {name of the folder where de apiproxy folder is located - ex. "/folder_name"} (default > ./)
 - lang: json | yaml (default > json)
-- auth: apikey | token (default > apikey)
+- auth: apikey | bearer (default > apikey)
 - config: {name of the folder where de env_config.json file is located - ex. "/folder_name"} (default > ./)
     
 ## Create a env_config.json File

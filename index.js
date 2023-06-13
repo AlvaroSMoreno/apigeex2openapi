@@ -18,7 +18,7 @@ if(index > -1) {
     console.log('HELP FLAGS:');
     console.log('-folder: {name of the folder where de apiproxy folder is located - ex. "/folder_name"} (default > ./)');
     console.log('-lang: json | yaml (default > json)');
-    console.log('-auth: apikey | token (default > apikey)');
+    console.log('-auth: apikey | bearer (default > apikey)');
     console.log('-config: {name of the folder where de env_config.json file is located - ex. "/folder_name"} (default > ./)');
 }else {
 
@@ -106,26 +106,9 @@ if(index > -1) {
         const path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].toString();
         const http_verb = flow_condition[flow_condition.indexOf('request.verb')+1].toString();
         const description = item._attributes.name;
-        params_arr = [
-            {
-                name: "apikey",
-                in: "header",
-                schema: {
-                    type: "string",
-                    example: "{client_id}"
-                }
-            } 
-        ];
-        if(info.auth == 'token') {
-            params_arr.push({
-                name: "Authorization",
-                in: "header",
-                schema: {
-                    type: "string",
-                    example: "Bearer {access_token}"
-                }
-            });
-        }
+        
+        params_arr = [];
+        
         let content_conditional = {};
         result.paths[path_suffix] = {};
         // if we have path params
@@ -179,7 +162,41 @@ if(index > -1) {
             result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody = {};
             result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody.content = content_conditional;
         }
+
+        // security
+        result.paths[path_suffix][http_verb.toString().toLowerCase()].security = [
+            {
+                apikey: []
+            }
+        ];
+
+        if(info.auth == 'bearer') {
+            result.paths[path_suffix][http_verb.toString().toLowerCase()].security.push(
+                {
+                    bearerAuth: []
+                }
+            );
+        }
     }
+
+    let security_arr = {};
+
+    security_arr.apikey = {
+            type: "apiKey",
+            name: "apikey",
+            in: "header"
+    };
+
+    if(info.auth == 'bearer') {
+        security_arr.bearerAuth = {
+            type: "http",
+            scheme: "bearer"
+        }
+    }
+
+    result.components = {};
+
+    result.components.securitySchemes = security_arr;
 
     name_of_file = name_of_file.replaceAll('.xml', '');
     if(info.lang == 'json') {
