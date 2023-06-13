@@ -100,9 +100,9 @@ if(index > -1) {
 
     for(flow in obj_arr) {
         let item = obj_arr[flow];
-        const flow_condition = item.Condition._text.split(' ');
-        const path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].replaceAll('"','').replaceAll(')','').replaceAll('(','').toString();
-        const http_verb = flow_condition[flow_condition.indexOf('(request.verb')+2].replaceAll('"','').replaceAll(')','').replaceAll('(','');
+        const flow_condition = item.Condition._text.replaceAll('(', '').replaceAll(')', '').replaceAll('"','').replaceAll('= ','').replaceAll('=',' ').split(' ');
+        const path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].toString();
+        const http_verb = flow_condition[flow_condition.indexOf('request.verb')+1].toString();
         const description = item._attributes.name;
         params_arr = [
             {
