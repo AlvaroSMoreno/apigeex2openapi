@@ -8,7 +8,8 @@ const YAML = require('yaml');
 let info = {
     "lang": "json",
     "auth": "apikey",
-    "folder": ""
+    "folder": "",
+    "config": "",
 };
 
 let index = process.argv.indexOf('-help');
@@ -18,6 +19,7 @@ if(index > -1) {
     console.log('-folder: {name of the folder where de apiproxy folder is located - ex. "/folder_name"} (default > ./)');
     console.log('-lang: json | yaml (default > json)');
     console.log('-auth: apikey | token (default > apikey)');
+    console.log('-config: {name of the folder where de env_config.json file is located - ex. "/folder_name"} (default > ./)');
 }else {
 
     index = process.argv.indexOf('-lang');
@@ -36,6 +38,12 @@ if(index > -1) {
     if(index > -1) {
         // there's folder flag
         info.folder = process.argv[index + 1];
+    }
+
+    index = process.argv.indexOf('-config');
+    if(index > -1) {
+        // there's config flag
+        info.config = process.argv[index + 1];
     }
 
     let name_of_file = '';
@@ -67,8 +75,21 @@ if(index > -1) {
         },
         version: 'rev '+json_data.APIProxy._attributes.revision
     };
-    result.servers =
-        [
+    let arr_servers_host = [];
+    const config_file = `.${info.config}/env_config.json`;
+    const data_config_file = JSON.parse(fs.readFileSync(config_file, { encoding: 'utf8', flag: 'r' }));
+
+    for(item in data_config_file) {
+        let env = data_config_file[item];
+        arr_servers_host.push({
+            url: env.hostname + json_data.APIProxy.BasePaths._text,
+            description: env.description
+        });
+    }
+
+    result.servers = arr_servers_host;
+
+    /* result.servers = [
         {
             url: "https://api-dev.digital.paccar.cloud"+json_data.APIProxy.BasePaths._text,
             description: "Development server"
@@ -85,7 +106,7 @@ if(index > -1) {
             url: "https://api-prod.digital.paccar.cloud/"+json_data.APIProxy.BasePaths._text,
             description: "Production server"
         }
-        ];
+    ]; */
 
     const xml_file2 = `.${info.folder}/apiproxy/proxies/default.xml`;
     const xml2 = fs.readFileSync(xml_file2, { encoding: 'utf8', flag: 'r' });
