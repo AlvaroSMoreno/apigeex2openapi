@@ -89,25 +89,6 @@ if(index > -1) {
 
     result.servers = arr_servers_host;
 
-    /* result.servers = [
-        {
-            url: "https://api-dev.digital.paccar.cloud"+json_data.APIProxy.BasePaths._text,
-            description: "Development server"
-        },
-        {
-            url: "https://api-test.digital.paccar.cloud"+json_data.APIProxy.BasePaths._text,
-            description: "Testing server"
-        },
-        {
-            url: "https://api-qa.digital.paccar.cloud/"+json_data.APIProxy.BasePaths._text,
-            description: "Staging server"
-        },
-        {
-            url: "https://api-prod.digital.paccar.cloud/"+json_data.APIProxy.BasePaths._text,
-            description: "Production server"
-        }
-    ]; */
-
     const xml_file2 = `.${info.folder}/apiproxy/proxies/default.xml`;
     const xml2 = fs.readFileSync(xml_file2, { encoding: 'utf8', flag: 'r' });
     var json_data2 = JSON.parse(parser.xml2json(xml2, {
