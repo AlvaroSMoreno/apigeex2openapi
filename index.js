@@ -113,17 +113,37 @@ if(index > -1) {
         result.paths[path_suffix] = {};
         // if we have path params
         let path_param = "";
-        if(path_suffix.indexOf('{')>-1) {
-            path_param = path_suffix.substring(path_suffix.indexOf('{')+1, path_suffix.indexOf('}'));
-            params_arr.push({
-                name: path_param,
-                in: "path",
-                required: true,
-                schema: {
-                    type: "string",
-                    example: `{${path_param}}`
+        if(path_suffix.split('{').length > 2) {
+            // more than 1 path parameters were found
+            const arr_paths =  path_suffix.split('{');
+            for(let i = 1; i < arr_paths.length; i++) {
+                if(path_suffix.indexOf('}')>-1) {
+                    path_param = arr_paths[i].substring(0, arr_paths[i].indexOf('}'));
+                    params_arr.push({
+                        name: path_param,
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            example: `{${path_param}}`
+                        }
+                    });
                 }
-            });
+            }
+        }else {
+            // only 1 path parameter was found...
+            if(path_suffix.indexOf('{')>-1) {
+                path_param = path_suffix.substring(path_suffix.indexOf('{')+1, path_suffix.indexOf('}'));
+                params_arr.push({
+                    name: path_param,
+                    in: "path",
+                    required: true,
+                    schema: {
+                        type: "string",
+                        example: `{${path_param}}`
+                    }
+                });
+            }
         }
         result.paths[path_suffix][http_verb.toString().toLowerCase()] = {
             description: description,
