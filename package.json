@@ -20,7 +20,9 @@
     "openapi",
     "oas",
     "apigee cli",
-    "apigee x"
+    "apigee x",
+    "gcp",
+    "google"
   ],
   "author": "Alvaro Moreno",
   "license": "MIT",
