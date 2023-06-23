@@ -40,7 +40,7 @@ Use the following structure to add a env_config file <br>
 ```
 
 ## Run a test
-    apigeex2openapi -lang yaml -folder /path_to_api_proxy_bundle
+    apigeex2openapi -out yaml -f /path_to_api_proxy_bundle
 
 ## Try Online
     https://editor.swagger.io/ :rocket:
