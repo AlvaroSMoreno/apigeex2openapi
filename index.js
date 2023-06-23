@@ -98,11 +98,13 @@ if(index > -1) {
     let result = {};
     result.openapi = "3.0.1"
 
-    let general_description = json_data.APIProxy.Description._text;
+    let text_temp =  json_data.APIProxy.Description._text;
+    text_temp = text_temp.toLowerCase().replace(/^./, str => str.toUpperCase());
+    let general_description = text_temp;
     let long_description = "";
     if(info.info == 'long') {
-        general_description = json_data.APIProxy._attributes.name;
-        long_description = json_data.APIProxy.Description._text;
+        general_description = "API rev "+json_data.APIProxy._attributes.revision;
+        long_description = text_temp;
     }
 
     result.info = {
