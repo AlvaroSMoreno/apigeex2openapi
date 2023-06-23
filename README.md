@@ -43,8 +43,8 @@ Use the following structure to add a env_config file <br>
     apigeex2openapi -out yaml -f /path_to_api_proxy_bundle
 
 ## Try Online
-    https://editor.swagger.io/ :rocket:
+    https://editor.swagger.io/
 
 
 ## Author
-Alvaro Moreno :octocat:
+Alvaro Moreno :octocat: :rocket:
