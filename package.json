@@ -22,7 +22,9 @@
     "apigee cli",
     "apigee x",
     "gcp",
-    "google"
+    "google",
+    "rapid",
+    "api"
   ],
   "author": "Alvaro Moreno",
   "license": "MIT",
