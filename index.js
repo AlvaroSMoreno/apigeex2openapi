@@ -10,19 +10,27 @@ let info = {
     "auth": "apikey",
     "folder": "",
     "config": "",
+    "hub": "",
+    "info": "",
+    "category": "",
+    "who": "support@example.com"
 };
 
 let index = process.argv.indexOf('-help');
 if(index > -1) {
     // there's help flag
     console.log('HELP FLAGS:');
-    console.log('-folder: {name of the folder where de apiproxy folder is located - ex. "/folder_name"} (default > ./)');
-    console.log('-lang: json | yaml (default > json)');
-    console.log('-auth: apikey | bearer (default > apikey)');
+    console.log('-f: {name of the folder where de apiproxy folder is located - ex. "/folder_name"} (default > ./)');
+    console.log('-out: json | yaml (default > json)');
+    console.log('-auth: apikey | bearer | oauth2 (default > apikey)');
     console.log('-config: {name of the folder where de env_config.json file is located - ex. "/folder_name"} (default > ./)');
+    console.log('-hub: {example: rapid}');
+    console.log('-info: if ~rapid~ is chosen as the target platform, you can select the description as: short | long (default > short)');
+    console.log('-cat: if ~rapid~ is chosen as the target platform, you can select the category as: ["Aftermarket Parts", "Manufacturing", "Connected Truck", "Sales and Marketing", "Warranty", "Other"] (default > Other)');
+    console.log('-who: Developer/Tech Support email responsible for this API {example: support@example.com}');
 }else {
 
-    index = process.argv.indexOf('-lang');
+    index = process.argv.indexOf('-out');
     if(index > -1) {
         // there's lang flag
         info.lang = process.argv[index + 1];
@@ -34,7 +42,7 @@ if(index > -1) {
         info.auth = process.argv[index + 1];
     }
 
-    index = process.argv.indexOf('-folder');
+    index = process.argv.indexOf('-f');
     if(index > -1) {
         // there's folder flag
         info.folder = process.argv[index + 1];
@@ -44,6 +52,33 @@ if(index > -1) {
     if(index > -1) {
         // there's config flag
         info.config = process.argv[index + 1];
+    }
+
+    index = process.argv.indexOf('-hub');
+    if(index > -1) {
+        // there's hub/platform flag
+        info.hub = process.argv[index + 1];
+        // review description on info and category for rapid products...
+        if(info.hub == 'rapid') {
+            // info
+            index = process.argv.indexOf('-info');
+            info.info = 'short';
+            if(index > -1) {
+                info.info = process.argv[index + 1];
+            }
+            // category for rapid products
+            index = process.argv.indexOf('-cat');
+            info.category = 'Other';
+            if(index > -1) {
+                info.category = process.argv[index + 1];
+            }
+        }
+    }
+
+    index = process.argv.indexOf('-who');
+    if(index > -1) {
+        // there's who flag
+        info.who = process.argv[index + 1];
     }
 
     let name_of_file = '';
@@ -62,12 +97,20 @@ if(index > -1) {
 
     let result = {};
     result.openapi = "3.0.1"
+
+    let general_description = json_data.APIProxy.Description._text;
+    let long_description = "";
+    if(info.info == 'long') {
+        general_description = json_data.APIProxy._attributes.name;
+        long_description = json_data.APIProxy.Description._text;
+    }
+
     result.info = {
         title: json_data.APIProxy._attributes.name,
-        description: json_data.APIProxy.Description._text,
+        description: general_description,
         contact: {
             name: "API Support",
-            email: "support@example.com"
+            email: info.who
         },
         license: {
             name: "Apache 2.0",
@@ -75,16 +118,32 @@ if(index > -1) {
         },
         version: 'rev '+json_data.APIProxy._attributes.revision
     };
+    if(info.hub == 'rapid') {
+        result.info["x-long-description"] = long_description;
+        result.info["x-category"] = info.category;
+        result.info["x-public"] = false;
+        result.info["x-version-lifecycle"] = 'active';
+        result.info["x-collections"] = [];
+    }
+
+    // include external docs for the cli tool
+    result.externalDocs = {
+        description: "Find out more about ApigeeX to Open Api cli tool",
+        url: "https://github.com/AlvaroSMoreno/apigeex2openapi"
+    };
+
     let arr_servers_host = [];
     const config_file = `.${info.config}/env_config.json`;
     const data_config_file = JSON.parse(fs.readFileSync(config_file, { encoding: 'utf8', flag: 'r' }));
 
     for(item in data_config_file) {
         let env = data_config_file[item];
-        arr_servers_host.push({
-            url: env.hostname + json_data.APIProxy.BasePaths._text,
-            description: env.description
-        });
+        if(env.type == 'server') {
+            arr_servers_host.push({
+                url: env.hostname,
+                description: env.description
+            });
+        }
     }
 
     result.servers = arr_servers_host;
@@ -103,11 +162,26 @@ if(index > -1) {
     for(flow in obj_arr) {
         let item = obj_arr[flow];
         const flow_condition = item.Condition._text.replaceAll('(', '').replaceAll(')', '').replaceAll('"','').replaceAll('= ','').replaceAll('=',' ').split(' ');
-        const path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].toString();
+        let path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].toString();
         const http_verb = flow_condition[flow_condition.indexOf('request.verb')+1].toString();
         const description = item._attributes.name;
+
+        path_suffix = json_data.APIProxy.BasePaths._text+path_suffix;
         
         params_arr = [];
+
+        if(info.hub == 'rapid') {
+            params_arr.push({
+                name: "apikey",
+                in: "header",
+                required: true,
+                schema: {
+                    externalDocs: {
+                        url: ""
+                    }
+                }
+            });
+        }
         
         let content_conditional = {};
         result.paths[path_suffix] = {};
@@ -184,11 +258,13 @@ if(index > -1) {
         }
 
         // security
-        result.paths[path_suffix][http_verb.toString().toLowerCase()].security = [
-            {
-                apikey: []
-            }
-        ];
+        if(info.hub != 'rapid') {
+            result.paths[path_suffix][http_verb.toString().toLowerCase()].security = [
+                {
+                    apikey: []
+                }
+            ];
+        }
 
         if(info.auth == 'bearer') {
             result.paths[path_suffix][http_verb.toString().toLowerCase()].security.push(
@@ -201,11 +277,13 @@ if(index > -1) {
 
     let security_arr = {};
 
-    security_arr.apikey = {
+    if(info.hub != 'rapid') {
+        security_arr.apikey = {
             type: "apiKey",
             name: "apikey",
             in: "header"
-    };
+        };
+    }
 
     if(info.auth == 'bearer') {
         security_arr.bearerAuth = {
@@ -214,13 +292,51 @@ if(index > -1) {
         }
     }
 
+    if(info.auth == 'oauth2') {
+        let token_url_arr = [];
+        for(item in data_config_file) {
+            let env = data_config_file[item];
+            if(env.type == 'token_url') {
+                token_url_arr.push(env.hostname);
+            }
+        }
+        const token_url = (token_url_arr.length > 0)? token_url_arr[0] : "";
+        security_arr.security_scheme_name = {
+            "x-client-authentication": "BODY",
+            "x-scope-separator": "COMMA",
+            type: "oauth2",
+            flows: {
+                clientCredentials: {
+                  tokenUrl: token_url
+                }
+            }
+        }
+    }
+
     result.components = {};
 
     result.components.securitySchemes = security_arr;
 
+    if(info.hub == 'rapid') {
+        result["x-gateways"] = [];
+
+        for(item in data_config_file) {
+            let env = data_config_file[item];
+            if(env.type == 'server') {
+                result["x-gateways"].push({
+                    "url": env.hostname
+                });
+            }
+        }
+        
+        result["x-documentation"] = {
+            tutorials: []
+        }
+    }
+
     name_of_file = name_of_file.replaceAll('.xml', '');
     if(info.lang == 'json') {
-        fs.writeFileSync(`oas_file_${name_of_file}.json`, JSON.stringify(result));
+        fs.writeFileSync(`oas_file_${name_of_file}.json`, JSON.stringify(result, null, '\t'));
         console.log('Done!');
     }else {
         const doc = new YAML.Document();

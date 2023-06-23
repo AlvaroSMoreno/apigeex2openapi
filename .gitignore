@@ -2,3 +2,6 @@ node_modules
 env_config.json
 assets
 *.yaml
+public
+*.html
+server.js
