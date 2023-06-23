@@ -1,6 +1,6 @@
 {
   "name": "apigeex2openapi",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Open API convertion from Apigee X Proxy bundle",
   "main": "index.js",
   "repository": {
