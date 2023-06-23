@@ -4,6 +4,7 @@ const fs = require('fs');
 const { exit } = require('process');
 const parser = require('xml-js');
 const YAML = require('yaml');
+const path = require('path');
 
 let info = {
     "lang": "json",
@@ -13,7 +14,8 @@ let info = {
     "hub": "",
     "info": "",
     "category": "",
-    "who": "support@example.com"
+    "who": "support@example.com",
+    "payload": 'true'
 };
 
 let index = process.argv.indexOf('-help');
@@ -28,6 +30,7 @@ if(index > -1) {
     console.log('-info: if ~rapid~ is chosen as the target platform, you can select the description as: short | long (default > short)');
     console.log('-cat: if ~rapid~ is chosen as the target platform, you can select the category as: ["Aftermarket Parts", "Manufacturing", "Connected Truck", "Sales and Marketing", "Warranty", "Other"] (default > Other)');
     console.log('-who: Developer/Tech Support email responsible for this API {example: support@example.com}');
+    console.log('-body: false | true (default > true)');
 }else {
 
     index = process.argv.indexOf('-out');
@@ -79,6 +82,12 @@ if(index > -1) {
     if(index > -1) {
         // there's who flag
         info.who = process.argv[index + 1];
+    }
+
+    index = process.argv.indexOf('-body');
+    if(index > -1) {
+        // there's payload/body flag
+        info.payload = process.argv[index + 1];
     }
 
     let name_of_file = '';
@@ -161,12 +170,49 @@ if(index > -1) {
 
     let obj_arr = (json_data2.ProxyEndpoint.Flows.Flow.length != undefined)? json_data2.ProxyEndpoint.Flows.Flow : json_data2.ProxyEndpoint.Flows;
 
+    const policies_dir_path = path.join(__dirname, `${info.folder}/apiproxy/policies`);
+
     for(flow in obj_arr) {
         let item = obj_arr[flow];
         const flow_condition = item.Condition._text.replaceAll('(', '').replaceAll(')', '').replaceAll('"','').replaceAll('= ','').replaceAll('=',' ').split(' ');
         let path_suffix = flow_condition[flow_condition.indexOf('MatchesPath')+1].toString();
         const http_verb = flow_condition[flow_condition.indexOf('request.verb')+1].toString();
         const description = item._attributes.name;
+
+        const proxy_suffix_name = description.replaceAll(' ', '');
+
+        let temp_xml_file = '';
+
+        const filenames = fs.readdirSync(policies_dir_path);
+
+        for(policy in filenames) {
+            const file = filenames[policy];
+            // we keep just the last portion after a "-" being this the name match for the cond flow
+            const nm_file = file.split('.')[0].split('-')[file.split('.')[0].split('-').length - 1];
+            if(nm_file == proxy_suffix_name) {
+                temp_xml_file = file;
+                break;
+            }
+        }
+
+        let arr_payload_props = {};
+
+        if(temp_xml_file != '') {
+            const xml_policy_dir = `.${info.folder}/apiproxy/policies/${temp_xml_file}`;
+            const xml_policy = fs.readFileSync(xml_policy_dir, { encoding: 'utf8', flag: 'r' });
+            var json_policy = JSON.parse(parser.xml2json(xml_policy, {
+                compact: true,
+                space: 4
+            }));
+            
+            const arr_json_vars = json_policy.ExtractVariables.JSONPayload.Variable;
+            for(variable in arr_json_vars) {
+                const field = arr_json_vars[variable];
+                arr_payload_props[field._attributes.name] = {};
+                arr_payload_props[field._attributes.name].type = "string";
+            }
+
+        }
 
         path_suffix = json_data.APIProxy.BasePaths._text+path_suffix;
         
@@ -221,6 +267,7 @@ if(index > -1) {
                 });
             }
         }
+
         result.paths[path_suffix][http_verb.toString().toLowerCase()] = {
             description: description,
             parameters: params_arr,
@@ -240,21 +287,28 @@ if(index > -1) {
             }
         };
         if(http_verb.toString().toLowerCase() == 'post' || http_verb.toString().toLowerCase() == 'put') {
+            if(info.payload != 'true') {
+                arr_payload_props = {
+                    key1: {
+                        type: "integer"
+                    },
+                    key2: {
+                        type: "string"
+                    },
+                    key3: {
+                        type: "boolean"
+                    }
+                };
+            }
             content_conditional = {
                 "application/json": {
                     schema: {
                         type: "object",
-                        properties: {
-                            key1: {
-                                type: "integer"
-                            },
-                            key2: {
-                                type: "string"
-                            }
-                        }
+                        properties: arr_payload_props
                     }
                 }
             };
+
             result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody = {};
             result.paths[path_suffix][http_verb.toString().toLowerCase()].requestBody.content = content_conditional;
         }

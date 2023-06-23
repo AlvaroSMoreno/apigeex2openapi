@@ -1,5 +1,6 @@
 # apigeex2openapi
-Command line tool to generate OAS File from an exported API Proxy bundle from APIGEE X v2.0
+Command line tool to generate OAS File from an exported API Proxy bundle from APIGEE X v2.0 <br>
+*Custom fields added to publish APIs into Rapid Platform*
 
 ![alt text](https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Apigee_logo.svg/500px-Apigee_logo.svg.png)
 
@@ -13,9 +14,10 @@ Command line tool to generate OAS File from an exported API Proxy bundle from AP
 - auth: apikey | bearer | oauth2 (default > apikey)
 - config: {name of the folder where de env_config.json file is located - ex. "/folder_name"} (default > ./)
 - hub: {example: rapid}
-- info: if ~rapid~ is chosen as the target platform, you can select the description as: short | long (default > short)
-- cat: if ~rapid~ is chosen as the target platform, you can select the category as: ["Aftermarket Parts", "Manufacturing", "Connected Truck", "Sales and Marketing", "Warranty", "Other"] (default > Other)
+- info: if *rapid* is chosen as the target platform, you can select the description as: short | long (default > short)
+- cat: if *rapid* is chosen as the target platform, you can select the category as: ["Aftermarket Parts", "Manufacturing", "Connected Truck", "Sales and Marketing", "Warranty", "Other"] (default > Other)
 - who: Developer/Tech Support email responsible for this API {example: support@example.com}
+- body: false | true (default > true)
     
 ## Create a env_config.json File
 Use the following structure to add a env_config file <br>
